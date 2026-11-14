@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>コールアプリ</title>
+</head>
+<body style="text-align:center;font-family:sans-serif;padding:30px">
+<h1>📞 コールアプリ</h1>
+<p id="status">ボタンを押してスタート！</p>
+<button id="start" style="font-size:22px;padding:15px">
+スタート
+</button>
+<audio id="sound" src="call_sound.mp3"></audio>
+
+<script>
+const sound = document.getElementById("sound");
+const statusText = document.getElementById("status");
+let lastTime = 0;
+let active = false;
+
+document.getElementById("start").onclick = async () => {
+  try {
+    if (typeof DeviceMotionEvent.requestPermission === "function") {
+      const permission = await DeviceMotionEvent.requestPermission();
+      if (permission !== "granted") {
+        statusText.textContent = "センサーの許可が必要です";
+        return;
+      }
+    }
+    await sound.play();
+    sound.pause();
+    sound.currentTime = 0;
+    active = true;
+    statusText.textContent = "準備OK！携帯をひねってね";
+  } catch (e) {
+    statusText.textContent = "音声ファイルを確認してね";
+  }
+};
+
+window.addEventListener("devicemotion", (event) => {
+  if (!active) return;
+  const r = event.rotationRate;
+  if (!r) return;
+  const now = Date.now();
+  if ((Math.abs(r.beta || 0) > 100 ||
+       Math.abs(r.gamma || 0) > 100) &&
+      now - lastTime > 1500) {
+    lastTime = now;
+    sound.currentTime = 0;
+    sound.play();
+  }
+});
+</script>
+</body>
+</html>
